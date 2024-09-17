@@ -6,7 +6,7 @@ volumes:
 
 services:
   app:
-    image: golang:1.23.0-alpine # Обновлено на версию 1.23.0
+    image: golang:1.23.0-alpine
     working_dir: /src
     environment:
       HOME: /tmp

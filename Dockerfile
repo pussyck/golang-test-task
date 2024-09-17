@@ -1,4 +1,3 @@
-# Используем Go 1.23.0
 FROM golang:1.23.0-alpine as builder
 
 RUN set -x \
@@ -10,7 +9,7 @@ WORKDIR /src
 
 COPY ./go.* ./
 
-# Загружаем и проверяем модули
+
 RUN set -x \
     && go version \
     && go mod download \
@@ -18,12 +17,10 @@ RUN set -x \
 
 COPY . /src
 
-# Сборка приложения
 RUN set -x \
     && go version \
     && GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o /tmp/app .
 
-# Образ для выполнения
 FROM alpine:latest as runtime
 
 RUN set -x \
