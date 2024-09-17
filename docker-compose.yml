@@ -6,7 +6,7 @@ volumes:
 
 services:
   app:
-    image: golang:1.14-stretch # Image page: <https://hub.docker.com/_/golang>
+    image: golang:1.23.0-alpine # Обновлено на версию 1.23.0
     working_dir: /src
     environment:
       HOME: /tmp
@@ -18,9 +18,12 @@ services:
       - tmp-data:/tmp:cached
     depends_on:
       - redis
+    ports:
+      - "8080:8080"
+    command: ./app
 
   redis:
-    image: redis:6.0.5-alpine
+    image: redis:7.4.0-alpine
     volumes:
       - redis-data:/data:cached
     ports:

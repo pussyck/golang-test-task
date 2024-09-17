@@ -1,9 +1,5 @@
-#!/usr/bin/make
-# Makefile readme (ru): <http://linux.yaroslavl.ru/docs/prog/gnu_make_3-79_russian_manual.html>
-# Makefile readme (en): <https://www.gnu.org/software/make/manual/html_node/index.html#SEC_Contents>
-
 SHELL = /bin/sh
-LDFLAGS = "-s -w"
+LDFLAGS = -s -w
 
 DOCKER_BIN = $(shell command -v docker 2> /dev/null)
 DC_BIN = $(shell command -v docker-compose 2> /dev/null)
@@ -14,13 +10,13 @@ APP_NAME = $(notdir $(CURDIR))
 .DEFAULT_GOAL : help
 .SILENT : test shell redis-cli
 
-# This will output the help for each task. thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+# Это выведет справку по каждой задаче.
 help: ## Show this help
 	@printf "\033[33m%s:\033[0m\n" 'Available commands'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[32m%-11s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 build: ## Build app binary file
-	$(DC_BIN) run $(DC_RUN_ARGS) --no-deps app go build -ldflags=$(LDFLAGS) .
+	$(DC_BIN) run $(DC_RUN_ARGS) --no-deps app go build -ldflags="$(LDFLAGS)" .
 
 fmt: ## Run source code formatter tools
 	$(DC_BIN) run $(DC_RUN_ARGS) --no-deps app sh -c 'GO111MODULE=off go get golang.org/x/tools/cmd/goimports && $$GOPATH/bin/goimports -d -w .'
