@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"log"
@@ -45,4 +46,61 @@ func processJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+func GetParkingDataByField(field, value string) ([]map[string]interface{}, error) {
+	var result []map[string]interface{}
+
+	if field == "global_id" {
+		val, err := redisClient.Get(ctx, value).Result()
+		if err != nil {
+			if errors.Is(err, redis.Nil) {
+				return nil, fmt.Errorf("no data found for %s", value)
+			}
+			return nil, fmt.Errorf("failed to get data from Redis: %v", err)
+		}
+
+		var record map[string]interface{}
+		if err := json.Unmarshal([]byte(val), &record); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal record: %v", err)
+		}
+		result = append(result, record)
+	} else {
+		keys, err := redisClient.Keys(ctx, "*").Result()
+		if err != nil {
+			return nil, err
+		}
+		for _, key := range keys {
+			jsonData, err := redisClient.Get(ctx, key).Result()
+			if err != nil {
+				return nil, err
+			}
+
+			var record map[string]interface{}
+			if err := json.Unmarshal([]byte(jsonData), &record); err != nil {
+				return nil, err
+			}
+
+			if CompareValue(record, field, value) {
+				result = append(result, record)
+			}
+		}
+	}
+	if len(result) == 0 {
+		return nil, fmt.Errorf("no data found for %s", value)
+	}
+
+	return result, nil
+}
+
+func CompareValue(record map[string]interface{}, field string, value string) bool {
+	val, ok := record[field]
+	if !ok {
+		return false
+	}
+
+	valStr := fmt.Sprintf("%v", val)
+	valueStr := fmt.Sprintf("%v", value)
+
+	return valStr == valueStr
 }

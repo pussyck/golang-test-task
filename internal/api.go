@@ -48,6 +48,29 @@ func LoadDataHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, `{"message": "Data loaded successfully"}`)
 }
 
+func GetParkingDataHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	for key, values := range query {
+		for _, value := range values {
+			if value != "" {
+				result, err := GetParkingDataByField(key, value)
+				if err != nil {
+					http.Error(w, err.Error(), 500)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				if err := json.NewEncoder(w).Encode(result); err != nil {
+					http.Error(w, "Failed to encode JSON response", http.StatusInternalServerError)
+					return
+				}
+				return
+			}
+		}
+	}
+	writeErrorResponse(w, http.StatusBadRequest, "No valid search parameters provided")
+}
+
 func writeErrorResponse(w http.ResponseWriter, code int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)

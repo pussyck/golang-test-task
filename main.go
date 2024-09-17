@@ -10,6 +10,7 @@ func main() {
 	internal.InitRedis()
 
 	http.HandleFunc("/load-data", internal.LoadDataHandler)
+	http.HandleFunc("/search", internal.GetParkingDataHandler)
 
 	log.Println("Listening on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
