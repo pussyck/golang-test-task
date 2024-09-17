@@ -5,6 +5,7 @@ go 1.23.0
 require (
 	github.com/prometheus/client_golang v1.20.3
 	github.com/redis/go-redis/v9 v9.6.1
+	golang.org/x/text v0.16.0
 )
 
 require (

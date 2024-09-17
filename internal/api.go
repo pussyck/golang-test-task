@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/text/encoding/charmap"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -38,7 +39,14 @@ func LoadDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = processJSON(data)
+	decoder := charmap.Windows1251.NewDecoder()
+	utf8Data, err := decoder.Bytes(data)
+	if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Failed to decode file data")
+		return
+	}
+
+	err = processJSON(utf8Data)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Failed to process JSON data")
 		return
