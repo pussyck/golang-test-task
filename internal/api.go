@@ -2,28 +2,26 @@ package internal
 
 import (
 	"encoding/json"
-	"fmt"
 	"golang.org/x/text/encoding/charmap"
 	"io"
 	"mime/multipart"
 	"net/http"
 )
 
-type ErrorResponse struct {
-	Code    int    `json:"code"`
+type Response struct {
 	Message string `json:"message"`
 }
 
 func LoadDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
-		writeErrorResponse(w, http.StatusMethodNotAllowed, "MethodNotAllowed")
+		writeResponse(w, http.StatusMethodNotAllowed, "MethodNotAllowed")
 		return
 	}
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		writeErrorResponse(w, http.StatusBadRequest, "Failed to get file")
+		writeResponse(w, http.StatusBadRequest, "Failed to get file")
 		return
 	}
 	defer func(file multipart.File) {
@@ -35,36 +33,38 @@ func LoadDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	data, err := io.ReadAll(file)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Failed read file")
+		writeResponse(w, http.StatusInternalServerError, "Failed read file")
 		return
 	}
 
 	decoder := charmap.Windows1251.NewDecoder()
 	utf8Data, err := decoder.Bytes(data)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Failed to decode file data")
+		writeResponse(w, http.StatusInternalServerError, "Failed to decode file data")
 		return
 	}
 
 	err = processJSON(utf8Data)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Failed to process JSON data")
+		writeResponse(w, http.StatusInternalServerError, "Failed to process JSON data")
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintln(w, `{"message": "Data loaded successfully"}`)
+	writeResponse(w, http.StatusOK, "Data loaded successfully")
 }
 
 func GetParkingDataHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-
+	if r.Method != http.MethodGet {
+		writeResponse(w, http.StatusMethodNotAllowed, "MethodNotAllowed")
+		return
+	}
 	for key, values := range query {
 		for _, value := range values {
 			if value != "" {
 				result, err := GetParkingDataByField(key, value)
 				if err != nil {
-					http.Error(w, err.Error(), 500)
+					writeResponse(w, http.StatusNotFound, err.Error())
 					return
 				}
 				w.Header().Set("Content-Type", "application/json")
@@ -76,19 +76,18 @@ func GetParkingDataHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	writeErrorResponse(w, http.StatusBadRequest, "No valid search parameters provided")
+	writeResponse(w, http.StatusBadRequest, "No valid search parameters provided")
 }
 
-func writeErrorResponse(w http.ResponseWriter, code int, message string) {
+func writeResponse(w http.ResponseWriter, code int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
-	errResp := ErrorResponse{
-		Code:    code,
+	resp := Response{
 		Message: message,
 	}
 
-	if err := json.NewEncoder(w).Encode(errResp); err != nil {
-		http.Error(w, "Failed to encode error response", 500)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "", 500)
 	}
 }
