@@ -12,7 +12,7 @@ var (
 			Name: "http_requests_total",
 			Help: "Total number of requests for each HTTP method",
 		},
-		[]string{"method"},
+		[]string{"method", "path"},
 	)
 
 	requestStatusCodes = prometheus.NewCounterVec(
@@ -20,7 +20,7 @@ var (
 			Name: "http_requests_status_codes_total",
 			Help: "Total number of requests by HTTP status codes",
 		},
-		[]string{"method", "status_code"},
+		[]string{"method", "path", "status_code"},
 	)
 
 	requestDuration = prometheus.NewHistogramVec(
@@ -29,7 +29,7 @@ var (
 			Help:    "Duration of HTTP requests",
 			Buckets: prometheus.DefBuckets,
 		},
-		[]string{"method"},
+		[]string{"method", "path"},
 	)
 )
 

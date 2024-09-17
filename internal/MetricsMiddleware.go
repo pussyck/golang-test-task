@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// responseRecorder записывает статус код и размер ответа
 type responseRecorder struct {
 	http.ResponseWriter
 	statusCode int
@@ -15,15 +16,22 @@ func (rr *responseRecorder) WriteHeader(code int) {
 	rr.ResponseWriter.WriteHeader(code)
 }
 
+// MetricsMiddleware обновляет метрики для каждого запроса
 func MetricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		rr := &responseRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+
+		path := r.URL.Path
+
 		next.ServeHTTP(rr, r)
 
 		duration := time.Since(start).Seconds()
-		requestsTotal.WithLabelValues(r.Method).Inc()
-		requestStatusCodes.WithLabelValues(r.Method, http.StatusText(rr.statusCode)).Inc()
-		requestDuration.WithLabelValues(r.Method).Observe(duration)
+		method := r.Method
+		statusCode := rr.statusCode
+
+		requestsTotal.WithLabelValues(method, path).Inc()
+		requestStatusCodes.WithLabelValues(method, path, http.StatusText(statusCode)).Inc()
+		requestDuration.WithLabelValues(method, path).Observe(duration)
 	})
 }
