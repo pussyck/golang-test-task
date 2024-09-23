@@ -6,8 +6,7 @@ import (
 	"net/http"
 )
 
-// LoadDataHandler handler for data load route
-func LoadDataHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) LoadDataHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.WriteResponse(w, http.StatusMethodNotAllowed, "MethodNotAllowed")
 		return
@@ -18,12 +17,22 @@ func LoadDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	if fileErr == nil {
 		defer file.Close()
-		storage.ProcessFile(w, file)
+		err := storage.ProcessFile(file, h.RedisClient)
+		if err != nil {
+			utils.WriteResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		utils.WriteResponse(w, http.StatusOK, "data loaded successfully")
 		return
 	}
 
 	if url != "" {
-		storage.ProcessURL(w, url)
+		err := storage.ProcessURL(url, h.RedisClient)
+		if err != nil {
+			utils.WriteResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		utils.WriteResponse(w, http.StatusOK, "data loaded successfully")
 		return
 	}
 

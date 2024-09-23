@@ -7,8 +7,7 @@ import (
 	"net/http"
 )
 
-// GetParkingDataHandler handler for search data
-func GetParkingDataHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetParkingDataHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	globalID := query.Get("global_id")
 	mode := query.Get("mode")
@@ -19,7 +18,7 @@ func GetParkingDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := storage.SearchData(globalID, mode, id)
+	result, err := storage.SearchData(globalID, mode, id, h.RedisClient)
 	if err != nil {
 		utils.WriteResponse(w, http.StatusInternalServerError, err.Error())
 		return

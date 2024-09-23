@@ -6,42 +6,56 @@ import (
 	"log"
 )
 
-var ctx = context.Background()
-var redisClient *redis.Client
+type RedisClient interface {
+	Set(key string, value interface{}) error
+	SAdd(key string, value string) error
+	SInter(keys ...string) ([]string, error)
+	SMembers(key string) ([]string, error)
+	HGetAll(key string) (map[string]string, error)
+	Get(key string) (string, error)
+}
 
-func InitRedis(addr, password string) {
-	redisClient = redis.NewClient(&redis.Options{
+var ctx = context.Background()
+
+type Client struct {
+	client *redis.Client
+}
+
+func NewRedisClient(addr, password string) *Client {
+	client := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: password,
 		DB:       0,
 	})
 
-	_, err := redisClient.Ping(ctx).Result()
+	_, err := client.Ping(ctx).Result()
 	if err != nil {
 		log.Fatalf("Could not connect to Redis: %v", err)
 	}
+
+	return &Client{client: client}
 }
 
-func SAdd(key string, value string) error {
-	return redisClient.SAdd(ctx, key, value).Err()
+func (r *Client) Set(key string, value interface{}) error {
+	return r.client.Set(ctx, key, value, 0).Err()
 }
 
-func SInter(keys ...string) ([]string, error) {
-	return redisClient.SInter(ctx, keys...).Result()
+func (r *Client) SAdd(key string, value string) error {
+	return r.client.SAdd(ctx, key, value).Err()
 }
 
-func SMembers(key string) ([]string, error) {
-	return redisClient.SMembers(ctx, key).Result()
+func (r *Client) SInter(keys ...string) ([]string, error) {
+	return r.client.SInter(ctx, keys...).Result()
 }
 
-func Set(key string, value interface{}) error {
-	return redisClient.Set(ctx, key, value, 0).Err()
+func (r *Client) SMembers(key string) ([]string, error) {
+	return r.client.SMembers(ctx, key).Result()
 }
 
-func HGetAll(key string) (map[string]string, error) {
-	return redisClient.HGetAll(ctx, key).Result()
+func (r *Client) HGetAll(key string) (map[string]string, error) {
+	return r.client.HGetAll(ctx, key).Result()
 }
 
-func Get(key string) (string, error) {
-	return redisClient.Get(ctx, key).Result()
+func (r *Client) Get(key string) (string, error) {
+	return r.client.Get(ctx, key).Result()
 }

@@ -6,8 +6,8 @@ import (
 	"fmt"
 )
 
-// SearchData search data on redis
-func SearchData(globalID, mode, id string) ([]map[string]interface{}, error) {
+// SearchData searches data in Redis
+func SearchData(globalID, mode, id string, redisClient redis.RedisClient) ([]map[string]interface{}, error) {
 	var result []string
 	var err error
 
@@ -27,7 +27,7 @@ func SearchData(globalID, mode, id string) ([]map[string]interface{}, error) {
 		}
 
 		if len(tags) > 0 {
-			result, err = redis.SInter(tags...)
+			result, err = redisClient.SInter(tags...)
 			if err != nil {
 				return nil, fmt.Errorf("failed to perform SINTER: %v", err)
 			}
@@ -36,7 +36,7 @@ func SearchData(globalID, mode, id string) ([]map[string]interface{}, error) {
 
 	var records []map[string]interface{}
 	for _, recordKey := range result {
-		data, err := redis.Get(recordKey)
+		data, err := redisClient.Get(recordKey)
 		if err != nil {
 			continue
 		}

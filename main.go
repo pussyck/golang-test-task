@@ -11,12 +11,13 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-	redis.InitRedis(cfg.RedisHost+":"+cfg.RedisPort, cfg.RedisPassword)
-
+	redisClient := redis.NewRedisClient(cfg.RedisHost+":"+cfg.RedisPort, cfg.RedisPassword)
 	internal.InitMetrics()
 
-	http.Handle("/load-data", internal.MetricsMiddleware(http.HandlerFunc(handler.LoadDataHandler)))
-	http.Handle("/search", internal.MetricsMiddleware(http.HandlerFunc(handler.GetParkingDataHandler)))
+	h := handler.NewHandler(redisClient)
+
+	http.Handle("/load-data", internal.MetricsMiddleware(http.HandlerFunc(h.LoadDataHandler)))
+	http.Handle("/search", internal.MetricsMiddleware(http.HandlerFunc(h.GetParkingDataHandler)))
 	http.Handle("/metrics", internal.HandleMetrics())
 
 	log.Println("Listening on port 8080")
