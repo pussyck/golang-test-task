@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// LoadDataHandler handler for load data from http or file
 func (h *Handler) LoadDataHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.WriteResponse(w, http.StatusMethodNotAllowed, "MethodNotAllowed")

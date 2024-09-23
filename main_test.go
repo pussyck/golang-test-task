@@ -135,15 +135,12 @@ func TestProcessZip(t *testing.T) {
 func TestSearchData(t *testing.T) {
 	mockRedisClient := new(MockRedisClient)
 
-	// Ожидаем вызов SInter с переменным количеством строк
 	mockRedisClient.On("SInter", mock.AnythingOfType("[]string")).Return([]string{"1", "2"}, nil)
 	mockRedisClient.On("Get", "1").Return(`{"global_id": 1, "Mode": "test", "ID": 123}`, nil)
 	mockRedisClient.On("Get", "2").Return(`{"global_id": 2, "Mode": "test", "ID": 456}`, nil)
 
-	// Вызов функции
 	records, err := storage.SearchData("", "test", "", mockRedisClient)
 
-	// Проверка результата
 	assert.NoError(t, err)
 	assert.Len(t, records, 2)
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// GetParkingDataHandler search data by query
 func (h *Handler) GetParkingDataHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	globalID := query.Get("global_id")
