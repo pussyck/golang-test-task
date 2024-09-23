@@ -94,9 +94,12 @@ func TestProcessURL(t *testing.T) {
 	// Создание тестового HTTP-сервера
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`[
+		_, err := w.Write([]byte(`[
 			{"global_id": 1, "Mode": "test", "ID": 123}
 		]`))
+		if err != nil {
+			return
+		}
 	}))
 	defer server.Close()
 
@@ -117,16 +120,22 @@ func TestProcessZip(t *testing.T) {
 	var buf bytes.Buffer
 	zipWriter := zip.NewWriter(&buf)
 	fileWriter, _ := zipWriter.Create("data.json")
-	fileWriter.Write([]byte(`[
+	_, err := fileWriter.Write([]byte(`[
 		{"global_id": 1, "Mode": "test", "ID": 123}
 	]`))
-	zipWriter.Close()
+	if err != nil {
+		return
+	}
+	err = zipWriter.Close()
+	if err != nil {
+		return
+	}
 
 	mockRedisClient.On("Set", "1", mock.Anything).Return(nil)
 	mockRedisClient.On("SAdd", "index:mode:test", "1").Return(nil)
 	mockRedisClient.On("SAdd", "index:id:123", "1").Return(nil)
 
-	err := storage.ProcessZip(buf.Bytes(), mockRedisClient)
+	err = storage.ProcessZip(buf.Bytes(), mockRedisClient)
 
 	assert.NoError(t, err)
 	mockRedisClient.AssertExpectations(t)
@@ -146,8 +155,14 @@ func TestSearchData(t *testing.T) {
 
 	var record1 map[string]interface{}
 	var record2 map[string]interface{}
-	json.Unmarshal([]byte(`{"global_id": 1, "Mode": "test", "ID": 123}`), &record1)
-	json.Unmarshal([]byte(`{"global_id": 2, "Mode": "test", "ID": 456}`), &record2)
+	err = json.Unmarshal([]byte(`{"global_id": 1, "Mode": "test", "ID": 123}`), &record1)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal([]byte(`{"global_id": 2, "Mode": "test", "ID": 456}`), &record2)
+	if err != nil {
+		return
+	}
 
 	assert.Equal(t, record1, records[0])
 	assert.Equal(t, record2, records[1])
@@ -165,7 +180,10 @@ func TestSearchDataWithGlobalID(t *testing.T) {
 	assert.Len(t, records, 1)
 
 	var record map[string]interface{}
-	json.Unmarshal([]byte(`{"global_id": 1, "Mode": "test", "ID": 123}`), &record)
+	err = json.Unmarshal([]byte(`{"global_id": 1, "Mode": "test", "ID": 123}`), &record)
+	if err != nil {
+		return
+	}
 
 	assert.Equal(t, record, records[0])
 	mockRedisClient.AssertExpectations(t)

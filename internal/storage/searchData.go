@@ -7,12 +7,12 @@ import (
 )
 
 // SearchData searches data in Redis
-func SearchData(globalID, mode, id string, redisClient redis.RedisClient) ([]map[string]interface{}, error) {
+func SearchData(globalID, mode, id string, redisClient redis.C) ([]map[string]interface{}, error) {
 	var result []string
 	var err error
 
 	if globalID != "" {
-		key := fmt.Sprintf("%s", globalID)
+		key := globalID
 		result = append(result, key)
 	} else {
 		var tags []string

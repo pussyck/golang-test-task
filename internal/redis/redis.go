@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-type RedisClient interface {
+type C interface {
 	Set(key string, value interface{}) error
 	SAdd(key string, value string) error
 	SInter(keys ...string) ([]string, error)

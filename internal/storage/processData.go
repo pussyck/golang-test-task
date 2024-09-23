@@ -14,7 +14,7 @@ import (
 )
 
 // ProcessFile saves data from a file
-func ProcessFile(file io.Reader, redisClient redis.RedisClient) error {
+func ProcessFile(file io.Reader, redisClient redis.C) error {
 	data, err := io.ReadAll(file)
 	if err != nil {
 		return fmt.Errorf("failed to read file")
@@ -29,7 +29,7 @@ func ProcessFile(file io.Reader, redisClient redis.RedisClient) error {
 }
 
 // ProcessURL saves data from a URL
-func ProcessURL(url string, redisClient redis.RedisClient) error {
+func ProcessURL(url string, redisClient redis.C) error {
 	resp, err := http.Get(url)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to download file from URL")
@@ -57,7 +57,7 @@ func ProcessURL(url string, redisClient redis.RedisClient) error {
 }
 
 // ProcessZip unzips and uses processJSON
-func ProcessZip(data []byte, redisClient redis.RedisClient) error {
+func ProcessZip(data []byte, redisClient redis.C) error {
 	archive, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
 		return fmt.Errorf("failed to open ZIP archive: %v", err)
@@ -87,7 +87,7 @@ func ProcessZip(data []byte, redisClient redis.RedisClient) error {
 }
 
 // ProcessJSON saves JSON records in Redis
-func ProcessJSON(data []byte, redisClient redis.RedisClient) error {
+func ProcessJSON(data []byte, redisClient redis.C) error {
 	decoder := charmap.Windows1251.NewDecoder()
 	utf8Data, err := decoder.Bytes(data)
 	if err != nil {
